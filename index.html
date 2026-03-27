@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Credvix — Dashboard Preditivo de Consultoras</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f0e;
+      --surface: #141714;
+      --surface-2: #1c201c;
+      --surface-3: #212621;
+      --border: #252a25;
+      --accent: #ff6b00;
+      --accent-soft: rgba(255, 107, 0, 0.12);
+      --green: #00d97e;
+      --yellow: #ffbe00;
+      --red: #ff3d5a;
+      --blue: #39a0ff;
+      --violet: #9b6cff;
+      --text: #e8eaf0;
+      --muted: #9ca49a;
+      --font-main: 'Montserrat', sans-serif;
+      --shadow: 0 18px 50px rgba(0,0,0,.28);
+      --radius-xl: 26px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: .35;
+      z-index: 9999;
+    }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 128, 32, .78) rgba(255,255,255,.05);
+    }
+
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.04);
+      border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,152,76,.95) 0%, rgba(255,107,0,.92) 100%);
+      border: 2px solid rgba(10, 12, 11, .95);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(255,176,106,.98) 0%, rgba(255,120,18,.95) 100%);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: rgba(255,255,255,.04);
+    }
+
+    .wrap {
+      width: min(1440px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding-bottom: 32px;
+    }
+
+    header {
+      padding: 34px 8px 26px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brand-logo {
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+    }
+
+    .brand-logo span { color: var(--accent); }
+
+    .dashboard-name {
+      margin-top: 10px;
+      font-size: clamp(21px, 2.2vw, 30px);
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+    }
+
+    .header-left p,
+    .refresh-status,
+    .btn-refresh,
+    .control-label,
+    .kpi-label,
+    .section-eyebrow,
+    .section-note,
+    .table-head,
+    .subtle,
+    .footer-note {
+      font-family: var(--font-main);
+    }
+
+    .header-left p {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      font-weight: 500;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .refresh-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+      animation: pulse 1.8s infinite;
+    }
+
+    .status-dot.loading {
+      background: var(--yellow);
+      box-shadow: 0 0 10px var(--yellow);
+    }
+
+    .status-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 10px var(--red);
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .35; }
+    }
+
+    .btn-refresh {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, #1c201c 0%, #161916 100%);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .btn-refresh:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 107, 0, .35);
+      background: linear-gradient(135deg, #1f231f 0%, #171917 100%);
+    }
+
+    main {
+      display: grid;
+      gap: 22px;
+      padding: 26px 8px 0;
+    }
+
+    .panel,
+    .controls,
+    .section-card,
+    .kpi-card,
+    .table-card,
+    .empty-state,
+    .info-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%), var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      align-items: end;
+    }
+
+    .control-group {
+      grid-column: span 4;
+      display: grid;
+      gap: 8px;
+    }
+
+    .control-group.grow { grid-column: span 8; }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: var(--muted);
+    }
+
+    .control-input,
+    .control-select {
+      width: 100%;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 16px;
+      padding: 15px 16px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .control-input::placeholder {
+      color: #838b81;
+    }
+
+    .control-input:hover,
+    .custom-select-trigger:hover {
+      border-color: rgba(255, 107, 0, .24);
+    }
+
+    .control-input:focus,
+    .control-select:focus,
+    .custom-select.open .custom-select-trigger {
+      border-color: rgba(255, 107, 0, .45);
+      box-shadow: 0 0 0 3px rgba(255, 107, 0, .12);
+      transform: translateY(-1px);
+    }
+
+    .native-hidden {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .custom-select {
+      position: relative;
+    }
+
+    .custom-select-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.07);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)),
+        var(--surface-2);
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+      text-align: left;
+    }
+
+    .custom-select-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .custom-select-arrow {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      background: rgba(255, 107, 0, .10);
+      color: var(--accent);
+      flex: 0 0 auto;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .custom-select-arrow svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .custom-select.open .custom-select-arrow {
+      transform: rotate(180deg);
+      background: rgba(255, 107, 0, .18);
+    }
+
+    .custom-select-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      right: 0;
+      z-index: 30;
+      display: none;
+      padding: 8px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(24, 28, 24, .98), rgba(16, 19, 16, .98));
+      box-shadow: 0 18px 42px rgba(0,0,0,.42);
+      backdrop-filter: blur(14px);
+      max-height: 280px;
+      overflow: auto;
+    }
+
+    .custom-select.open .custom-select-menu {
+      display: block;
+      animation: dropdownIn .18s ease;
+    }
+
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .custom-select-option {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      padding: 13px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .custom-select-option:hover,
+    .custom-select-option.is-active {
+      background: rgba(255, 107, 0, .12);
+      color: #fff3ea;
+    }
+
+    .section-card {
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: clamp(22px, 2.4vw, 32px);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+
+    .section-note {
+      max-width: 720px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .section-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .meta-chip,
+    .trend,
+    .zero-chip {
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .meta-chip strong { color: var(--accent); }
+
+    .grid-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .kpi-card,
+    .info-card {
+      border-radius: 20px;
+      padding: 18px;
+      min-height: 110px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::after,
+    .info-card::after {
+      content: '';
+      position: absolute;
+      right: -32px;
+      top: -32px;
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255,107,0,.16) 0%, rgba(255,107,0,0) 72%);
+      pointer-events: none;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .kpi-value {
+      font-size: clamp(24px, 2.2vw, 34px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .kpi-subtext {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .kpi-card {
+      isolation: isolate;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: .95;
+      z-index: -1;
+    }
+
+    .kpi-card.tone-produced::before {
+      background: linear-gradient(135deg, rgba(255,107,0,.16) 0%, rgba(255,107,0,.03) 35%, rgba(255,255,255,0) 100%);
+    }
+
+    .kpi-card.tone-contracts::before {
+      background: linear-gradient(135deg, rgba(57,160,255,.16) 0%, rgba(57,160,255,.03) 35%, rgba(255,255,255,0) 100%);
+    }
+
+    .kpi-card.tone-ticket::before {
+      background: linear-gradient(135deg, rgba(0,217,126,.16) 0%, rgba(0,217,126,.03) 35%, rgba(255,255,255,0) 100%);
+    }
+
+    .kpi-card.tone-days::before {
+      background: linear-gradient(135deg, rgba(155,108,255,.16) 0%, rgba(155,108,255,.03) 35%, rgba(255,255,255,0) 100%);
+    }
+
+    .kpi-card.tone-produced::after {
+      background: radial-gradient(circle, rgba(255,107,0,.22) 0%, rgba(255,107,0,0) 72%);
+    }
+
+    .kpi-card.tone-contracts::after {
+      background: radial-gradient(circle, rgba(57,160,255,.20) 0%, rgba(57,160,255,0) 72%);
+    }
+
+    .kpi-card.tone-ticket::after {
+      background: radial-gradient(circle, rgba(0,217,126,.20) 0%, rgba(0,217,126,0) 72%);
+    }
+
+    .kpi-card.tone-days::after {
+      background: radial-gradient(circle, rgba(155,108,255,.20) 0%, rgba(155,108,255,0) 72%);
+    }
+
+    .interactive-chip {
+      cursor: pointer;
+      user-select: none;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, opacity .16s ease;
+    }
+
+    .interactive-chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    }
+
+    .interactive-chip.is-active {
+      border-color: rgba(255,255,255,.28);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.05), 0 14px 28px rgba(0,0,0,.22);
+    }
+
+    .interactive-chip.is-dimmed {
+      opacity: .52;
+    }
+
+    .split-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1.05fr 1.35fr;
+    }
+
+    .stack-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr 0.9fr;
+      gap: 14px;
+    }
+
+    .info-card-feature {
+      min-height: 148px;
+    }
+
+    .mini-summary-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .mini-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: 12px;
+    }
+
+    .mini-summary-row:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .mini-summary-text {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .table-card {
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .table-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .table-title {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .table-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 70vh;
+      scrollbar-gutter: stable both-edges;
+      padding-right: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(20, 23, 20, .96);
+      backdrop-filter: blur(10px);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,.025);
+    }
+
+    .consultant-name {
+      font-weight: 700;
+      letter-spacing: -.1px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .zero-days-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 260px;
+    }
+
+    .zero-chip {
+      padding: 6px 10px;
+      font-size: 11px;
+      background: rgba(255, 61, 90, .11);
+      border-color: rgba(255, 61, 90, .18);
+      color: #ffd6de;
+    }
+
+    .trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+    }
+
+    .trend::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .trend.alta {
+      background: rgba(0, 217, 126, .10);
+      border-color: rgba(0, 217, 126, .18);
+      color: var(--green);
+    }
+
+    .trend.media {
+      background: rgba(255, 190, 0, .10);
+      border-color: rgba(255, 190, 0, .18);
+      color: var(--yellow);
+    }
+
+    .trend.baixa {
+      background: rgba(255, 61, 90, .10);
+      border-color: rgba(255, 61, 90, .18);
+      color: var(--red);
+    }
+
+    .status-pill,
+    .action-pill {
+      appearance: none;
+      -webkit-appearance: none;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.08);
+      white-space: nowrap;
+    }
+
+    .status-pill::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .status-pill.ok,
+    .action-pill.ok {
+      background: rgba(0, 217, 126, .10);
+      border-color: rgba(0, 217, 126, .18);
+      color: var(--green);
+    }
+
+    .status-pill.alerta,
+    .action-pill.alerta {
+      background: rgba(255, 190, 0, .10);
+      border-color: rgba(255, 190, 0, .18);
+      color: var(--yellow);
+    }
+
+    .status-pill.critico,
+    .action-pill.critico {
+      background: rgba(255, 61, 90, .10);
+      border-color: rgba(255, 61, 90, .18);
+      color: var(--red);
+    }
+
+    .status-pill.rampa,
+    .action-pill.rampa {
+      background: rgba(57, 160, 255, .10);
+      border-color: rgba(57, 160, 255, .18);
+      color: var(--blue);
+    }
+
+    .pill-value {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .empty-state {
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .error-box {
+      border: 1px solid rgba(255, 61, 90, .2);
+      background: rgba(255, 61, 90, .06);
+      color: #ffd6de;
+      border-radius: 18px;
+      padding: 16px 18px;
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .footer-note {
+      padding: 0 8px 28px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .footer-note strong { color: var(--text); }
+
+    @media (max-width: 1100px) {
+      .split-grid { grid-template-columns: 1fr; }
+      .summary-strip { grid-template-columns: 1fr; }
+      .grid-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .control-group, .control-group.grow { grid-column: span 12; }
+    }
+
+    @media (max-width: 680px) {
+      .wrap { width: min(100vw, calc(100vw - 18px)); }
+      header { padding: 24px 6px 18px; }
+      main { padding: 18px 6px 0; }
+      .section-card { padding: 18px; }
+      .controls { padding: 14px; }
+      .grid-kpis { grid-template-columns: 1fr; }
+      .table-wrap { max-height: none; }
+      .header-right { width: 100%; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="header-left">
+        <div class="brand-logo">Cred<span>vix</span></div>
+        <div class="dashboard-name">Dashboard Preditivo de Consultoras</div>
+        <p>Fonte única: matriz bruta publicada no Google Sheets</p>
+      </div>
+      <div class="header-right">
+        <div class="refresh-status" id="refreshStatus">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="refreshText">Aguardando carga inicial</span>
+        </div>
+        <button class="btn-refresh" id="btnRefresh">Atualizar agora</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="controls">
+        <div class="control-group">
+          <label class="control-label" for="monthSelectTrigger">Período</label>
+          <div class="custom-select" id="monthSelectWrap">
+            <button type="button" class="custom-select-trigger" id="monthSelectTrigger" aria-haspopup="listbox" aria-expanded="false">
+              <span class="custom-select-label" id="monthSelectLabel">Selecione o período</span>
+              <span class="custom-select-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9l6 6 6-6"></path>
+                </svg>
+              </span>
+            </button>
+            <div class="custom-select-menu" id="monthSelectMenu" role="listbox" aria-label="Período"></div>
+            <select class="control-select native-hidden" id="monthSelect" tabindex="-1" aria-hidden="true"></select>
+          </div>
+        </div>
+        <div class="control-group grow">
+          <label class="control-label" for="searchInput">Filtro rápido de consultora</label>
+          <input class="control-input" id="searchInput" type="text" placeholder="Digite o nome da consultora para filtrar as tabelas" />
+        </div>
+      </section>
+
+      <section class="section-card" id="sectionZeroDays">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Análise de Ofensores (dias sem produção)</div>
+            <div class="section-note">
+              O cálculo considera apenas os dias operacionais do período selecionado. Domingos são ignorados. Sábado entra normalmente. Os dias zerados só passam a valer a partir da primeira venda da consultora dentro do mês filtrado. O status agora é calculado pela taxa de zeros dentro da janela monitorada, não pelo número bruto de dias zerados.
+            </div>
+          </div>
+          <div class="section-meta" id="zeroMeta"></div>
+        </div>
+
+        <div class="stack-layout">
+          <div class="summary-strip">
+            <div class="info-card info-card-feature" id="zeroSummaryCard"></div>
+            <div class="info-card" id="zeroStatusCard"></div>
+            <div class="info-card" id="zeroPriorityCard"></div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-head">
+              <div>
+                <div class="table-title">Mapa de zeros por consultora</div>
+                <div class="table-subtitle">Quantidade de dias zerados e relação das datas sem produção</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Consultora</th>
+                    <th>Monitoramento</th>
+                    <th>Dias zerados</th>
+                    <th>% de zeros</th>
+                    <th>Status</th>
+                    <th>Ação sugerida</th>
+                    <th>Quais dias zerou</th>
+                  </tr>
+                </thead>
+                <tbody id="zeroDaysBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-card" id="sectionPerformance">
+        <div class="section-head">
+          <div>
+            <div class="section-title">PAINEL DE GESTÃO PREDITIVA</div>
+            <div class="section-note">
+              A projeção considera uma base fixa de 22 dias operacionais. A tendência segue três faixas — alta, média e baixa — comparando a projeção individual com a média projetada do grupo.
+            </div>
+          </div>
+          <div class="section-meta" id="performanceMeta"></div>
+        </div>
+
+        <div class="grid-kpis" id="kpisGrid"></div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <div>
+              <div class="table-title">Performance por consultora e projeção</div>
+              <div class="table-subtitle">Realizado, quantidade de contratos, média diária, projeção em 22 dias e tendência relativa</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Consultora</th>
+                  <th>Realizado</th>
+                  <th>Contratos</th>
+                  <th>Média/dia</th>
+                  <th>Projeção (22d)</th>
+                  <th>Tendência</th>
+                </tr>
+              </thead>
+              <tbody id="performanceBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+      </section>
+
+      <section class="empty-state" id="emptyState" style="display:none;"></section>
+    </main>
+  </div>
+
+  <div class="footer-note">
+    <strong>Observações importantes.</strong> O dashboard trabalha a partir da matriz bruta publicada. Se existir consultora ativa sem nenhuma venda no mês e ela não estiver em <code>MANUAL_CONSULTANTS</code>, a base não tem como “adivinhar” essa pessoa. Na análise de ofensores, os dias zerados só começam a contar a partir da primeira venda da consultora no mês filtrado. Isso continua sendo um proxy, não uma data real de admissão. O status não usa mais o número bruto de dias zerados: ele usa a taxa de zeros dentro da janela monitorada. Regra aplicada: menos de 6 dias monitorados = <strong>Em rampa</strong>; até 30% de zeros = <strong>OK</strong>; acima de 30% até 60% = <strong>Alerta</strong>; acima de 60% = <strong>Crítico</strong>. A regra de tendência usada aqui não copia cegamente a planilha antiga: ela usa três níveis e uma comparação clara contra a média de projeção do grupo. Se você abrir este arquivo localmente e o navegador bloquear a leitura do Google Sheets, hospede o HTML em um servidor simples ou no mesmo ambiente em que hospedou o projeto Ferrão.
+  </div>
+
+  <script>
+    const CONFIG = {
+      SOURCE_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_-TT5pteqWXYKaaRJ4sfonQ2cUV8KQjWN2B_UKGJwfI4UUdBjO6JlPf5bxONQmNnsPYXbfW92Ji07/pubhtml',
+      PROJECTION_DAYS: 22,
+      EXCLUDED_WEEKDAYS: [0], // 0 = domingo no JavaScript
+      MANUAL_CONSULTANTS: [],
+      MIN_MONITORED_DAYS: 6,
+      AUTO_REFRESH_MS: 5 * 60 * 1000
+    };
+
+    const state = {
+      rawRows: [],
+      parsedRows: [],
+      availableMonths: [],
+      selectedMonth: '',
+      search: '',
+      zeroStatusFilter: '',
+      lastUpdatedAt: null,
+      loading: false,
+      error: ''
+    };
+
+    const els = {
+      btnRefresh: document.getElementById('btnRefresh'),
+      refreshText: document.getElementById('refreshText'),
+      statusDot: document.getElementById('statusDot'),
+      monthSelect: document.getElementById('monthSelect'),
+      monthSelectWrap: document.getElementById('monthSelectWrap'),
+      monthSelectTrigger: document.getElementById('monthSelectTrigger'),
+      monthSelectLabel: document.getElementById('monthSelectLabel'),
+      monthSelectMenu: document.getElementById('monthSelectMenu'),
+      searchInput: document.getElementById('searchInput'),
+      kpisGrid: document.getElementById('kpisGrid'),
+      zeroDaysBody: document.getElementById('zeroDaysBody'),
+      performanceBody: document.getElementById('performanceBody'),
+      zeroMeta: document.getElementById('zeroMeta'),
+      performanceMeta: document.getElementById('performanceMeta'),
+      zeroSummaryCard: document.getElementById('zeroSummaryCard'),
+      zeroStatusCard: document.getElementById('zeroStatusCard'),
+      zeroPriorityCard: document.getElementById('zeroPriorityCard'),
+      emptyState: document.getElementById('emptyState'),
+      errorBox: document.getElementById('errorBox')
+    };
+
+    function normalize(value) {
+      return String(value ?? '').trim();
+    }
+
+    function normalizeKey(value) {
+      return normalize(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function currency(value, digits = 2) {
+      return Number(value || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function numberBR(value, digits = 0) {
+      return Number(value || 0).toLocaleString('pt-BR', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function formatDate(date) {
+      if (!(date instanceof Date) || isNaN(date)) return '—';
+      return date.toLocaleDateString('pt-BR');
+    }
+
+    function formatMonth(monthKey) {
+      const [year, month] = monthKey.split('-').map(Number);
+      return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cur = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+          if (inQuotes && text[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === ',' && !inQuotes) {
+          row.push(cur);
+          cur = '';
+        } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+          if (ch === '\r' && text[i + 1] === '\n') i++;
+          row.push(cur);
+          rows.push(row);
+          row = [];
+          cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+
+      if (cur.length || row.length) {
+        row.push(cur);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function parseSmartNumber(value) {
+      if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+      let s = normalize(value);
+      if (!s) return 0;
+      s = s.replace(/R\$/gi, '').replace(/\s/g, '');
+      if (!s) return 0;
+
+      const comma = s.lastIndexOf(',');
+      const dot = s.lastIndexOf('.');
+
+      if (comma > -1 && dot > -1) {
+        if (comma > dot) {
+          s = s.replace(/\./g, '').replace(',', '.');
+        } else {
+          s = s.replace(/,/g, '');
+        }
+      } else if (comma > -1) {
+        s = /,\d{1,2}$/.test(s) ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+      } else if ((s.match(/\./g) || []).length > 1) {
+        const parts = s.split('.');
+        const last = parts.pop();
+        s = parts.join('') + '.' + last;
+      }
+
+      const n = Number.parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function parseSmartDate(value) {
+      if (value instanceof Date && !Number.isNaN(value)) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+      if (typeof value === 'number' && Number.isFinite(value) && value > 20000) {
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        const date = new Date(excelEpoch.getTime() + value * 86400000);
+        return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+      }
+
+      const s = normalize(value);
+      if (!s) return null;
+
+      const brMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (brMatch) {
+        const day = Number(brMatch[1]);
+        const month = Number(brMatch[2]);
+        const year = Number(brMatch[3].length === 2 ? `20${brMatch[3]}` : brMatch[3]);
+        return new Date(year, month - 1, day);
+      }
+
+      const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) {
+        return new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+      }
+
+      const generic = new Date(s);
+      if (!Number.isNaN(generic)) {
+        return new Date(generic.getFullYear(), generic.getMonth(), generic.getDate());
+      }
+
+      return null;
+    }
+
+    function getMonthKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function monthBounds(monthKey) {
+      const [year, month] = monthKey.split('-').map(Number);
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0);
+      return { start, end };
+    }
+
+    function toCsvUrl(sourceUrl) {
+      const url = new URL(sourceUrl);
+      if (url.searchParams.get('output') === 'csv') return url.toString();
+      if (url.pathname.endsWith('/pubhtml')) {
+        url.pathname = url.pathname.replace(/\/pubhtml$/, '/pub');
+      } else if (!url.pathname.endsWith('/pub')) {
+        url.pathname = url.pathname.replace(/\/$/, '') + '/pub';
+      }
+      url.searchParams.set('output', 'csv');
+      url.searchParams.set('_ts', Date.now().toString());
+      return url.toString();
+    }
+
+    function rowsToObjects(rows) {
+      const header = (rows[0] || []).map(normalize);
+      return rows.slice(1)
+        .filter(row => row.some(cell => normalize(cell) !== ''))
+        .map(row => {
+          const obj = {};
+          header.forEach((h, i) => { obj[h] = normalize(row[i] || ''); });
+          return obj;
+        });
+    }
+
+    function detectColumn(headerMap, candidates) {
+      const keys = Object.keys(headerMap);
+      for (const candidate of candidates) {
+        const found = keys.find(key => normalizeKey(key) === normalizeKey(candidate));
+        if (found) return found;
+      }
+      for (const candidate of candidates) {
+        const found = keys.find(key => normalizeKey(key).includes(normalizeKey(candidate)));
+        if (found) return found;
+      }
+      return '';
+    }
+
+    function buildDataset(rawObjects) {
+      if (!rawObjects.length) return [];
+
+      const headerMap = rawObjects[0];
+      const paymentKey = detectColumn(headerMap, ['Pagamento', 'Data', 'Data Pagamento']);
+      const consultantKey = detectColumn(headerMap, ['Consultor', 'Consultora']);
+      const proposalKey = detectColumn(headerMap, ['Proposta', 'Contrato']);
+      const valueKey = detectColumn(headerMap, ['Valor', 'Valor Pago', 'Valor Liberado']);
+
+      if (!paymentKey || !consultantKey || !proposalKey || !valueKey) {
+        throw new Error('Não consegui identificar automaticamente as colunas Pagamento, Consultor, Proposta e Valor na matriz.');
+      }
+
+      return rawObjects
+        .map(row => {
+          const date = parseSmartDate(row[paymentKey]);
+          const consultant = normalize(row[consultantKey]).toUpperCase();
+          const proposal = normalize(row[proposalKey]);
+          const value = parseSmartNumber(row[valueKey]);
+          return { date, consultant, proposal, value };
+        })
+        .filter(row => row.date && row.consultant);
+    }
+
+    function getAvailableMonths(rows) {
+      return [...new Set(rows.map(row => getMonthKey(row.date)))].sort((a, b) => a < b ? 1 : -1);
+    }
+
+    function periodRows(rows, monthKey) {
+      return rows.filter(row => getMonthKey(row.date) === monthKey);
+    }
+
+    function buildOperationalDays(monthKey, periodRowsData, latestGlobalMonth) {
+      const { start, end } = monthBounds(monthKey);
+      const latestInMonth = periodRowsData.reduce((acc, row) => row.date > acc ? row.date : acc, periodRowsData[0]?.date || end);
+      const effectiveEnd = monthKey === latestGlobalMonth ? latestInMonth : end;
+      const dates = [];
+      const cursor = new Date(start);
+
+      while (cursor <= effectiveEnd) {
+        const weekday = cursor.getDay();
+        if (!CONFIG.EXCLUDED_WEEKDAYS.includes(weekday)) {
+          dates.push(new Date(cursor));
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return dates;
+    }
+
+    function consultantList(periodRowsData) {
+      const base = new Set(periodRowsData.map(row => row.consultant));
+      CONFIG.MANUAL_CONSULTANTS.forEach(name => {
+        const normalized = normalize(name).toUpperCase();
+        if (normalized) base.add(normalized);
+      });
+      return [...base].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    }
+
+    function dayKey(date) {
+      return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0')
+      ].join('-');
+    }
+
+    function aggregateByConsultantAndDate(rows) {
+      const map = new Map();
+      rows.forEach(row => {
+        const key = `${row.consultant}__${dayKey(row.date)}`;
+        const current = map.get(key) || { value: 0, contracts: 0 };
+        current.value += row.value;
+        current.contracts += 1;
+        map.set(key, current);
+      });
+      return map;
+    }
+
+    function aggregateByConsultant(rows) {
+      const map = new Map();
+      rows.forEach(row => {
+        const current = map.get(row.consultant) || { realized: 0, contracts: 0, firstSaleDate: null, lastSaleDate: null };
+        current.realized += row.value;
+        current.contracts += 1;
+        if (!current.firstSaleDate || row.date < current.firstSaleDate) current.firstSaleDate = row.date;
+        if (!current.lastSaleDate || row.date > current.lastSaleDate) current.lastSaleDate = row.date;
+        map.set(row.consultant, current);
+      });
+      return map;
+    }
+
+    function buildViewModel() {
+      const latestMonth = state.availableMonths[0];
+      const rows = periodRows(state.parsedRows, state.selectedMonth);
+      const consultants = consultantList(rows);
+      const calendar = buildOperationalDays(state.selectedMonth, rows, latestMonth);
+      const dayAgg = aggregateByConsultantAndDate(rows);
+      const consultantAgg = aggregateByConsultant(rows);
+
+      const zeroDays = consultants.map(consultant => {
+        const agg = consultantAgg.get(consultant) || { realized: 0, contracts: 0, firstSaleDate: null, lastSaleDate: null };
+        const monitoredCalendar = agg.firstSaleDate
+          ? calendar.filter(date => date >= agg.firstSaleDate)
+          : [];
+
+        const zeroList = monitoredCalendar.filter(date => {
+          const key = `${consultant}__${dayKey(date)}`;
+          return !dayAgg.has(key) || (dayAgg.get(key)?.contracts || 0) === 0;
+        });
+
+        const zeroRate = monitoredCalendar.length ? zeroList.length / monitoredCalendar.length : 0;
+
+        return {
+          consultant,
+          monitoredDays: monitoredCalendar.length,
+          zeroCount: zeroList.length,
+          zeroRate,
+          zeroDates: zeroList,
+          firstSaleDate: agg.firstSaleDate,
+          lastSaleDate: agg.lastSaleDate,
+          realized: agg.realized || 0
+        };
+      }).sort((a, b) => b.zeroRate - a.zeroRate || b.zeroCount - a.zeroCount || a.consultant.localeCompare(b.consultant, 'pt-BR'));
+
+      const elapsedDays = calendar.length || 1;
+      const performanceRaw = consultants.map(consultant => {
+        const agg = consultantAgg.get(consultant) || { realized: 0, contracts: 0, firstSaleDate: null, lastSaleDate: null };
+        const averageDay = agg.realized / elapsedDays;
+        const projection = averageDay * CONFIG.PROJECTION_DAYS;
+        return {
+          consultant,
+          realized: agg.realized,
+          contracts: agg.contracts,
+          averageDay,
+          projection,
+          firstSaleDate: agg.firstSaleDate,
+          lastSaleDate: agg.lastSaleDate
+        };
+      });
+
+      const averageProjection = performanceRaw.length
+        ? performanceRaw.reduce((sum, item) => sum + item.projection, 0) / performanceRaw.length
+        : 0;
+
+      const performance = performanceRaw
+        .map(item => {
+          let trend = 'Média';
+          let trendClass = 'media';
+          if (averageProjection > 0) {
+            if (item.projection >= averageProjection * 1.1) {
+              trend = 'Alta';
+              trendClass = 'alta';
+            } else if (item.projection <= averageProjection * 0.9) {
+              trend = 'Baixa';
+              trendClass = 'baixa';
+            }
+          }
+          return { ...item, trend, trendClass };
+        })
+        .sort((a, b) => b.projection - a.projection || b.realized - a.realized);
+
+      const totalProduced = rows.reduce((sum, row) => sum + row.value, 0);
+      const totalContracts = rows.length;
+      const ticketMean = totalContracts ? totalProduced / totalContracts : 0;
+      const lastDate = rows.reduce((acc, row) => row.date > acc ? row.date : acc, rows[0]?.date || null);
+      const visibleSearch = normalize(state.search).toUpperCase();
+
+      const applySearch = list => {
+        if (!visibleSearch) return list;
+        return list.filter(item => item.consultant.includes(visibleSearch));
+      };
+
+      return {
+        monthLabel: formatMonth(state.selectedMonth),
+        lastDate,
+        elapsedDays,
+        averageProjection,
+        totalProduced,
+        totalContracts,
+        ticketMean,
+        consultantCount: consultants.length,
+        zeroDaysAll: zeroDays,
+        zeroDays: applySearch(zeroDays),
+        performanceAll: performance,
+        performance: applySearch(performance)
+      };
+    }
+
+
+    function classifyZeroStatus(zeroCount, monitoredDays) {
+      if (!monitoredDays) {
+        return {
+          label: 'Sem base',
+          className: 'rampa',
+          action: 'Aguardando primeira venda'
+        };
+      }
+
+      if (monitoredDays < CONFIG.MIN_MONITORED_DAYS) {
+        return {
+          label: 'Em rampa',
+          className: 'rampa',
+          action: 'Acompanhar histórico'
+        };
+      }
+
+      const zeroRate = zeroCount / monitoredDays;
+
+      if (zeroRate <= 0.30) {
+        return {
+          label: 'OK',
+          className: 'ok',
+          action: 'Manter ritmo'
+        };
+      }
+      if (zeroRate <= 0.60) {
+        return {
+          label: 'Alerta',
+          className: 'alerta',
+          action: 'Acompanhamento'
+        };
+      }
+      return {
+        label: 'Crítico',
+        className: 'critico',
+        action: 'Feedback imediato'
+      };
+    }
+
+    function buildOffenderSummary(zeroDaysAll) {
+      if (!zeroDaysAll.length) {
+        return 'Sem ocorrências de zero no período atual.';
+      }
+
+      const ranked = [...zeroDaysAll].sort((a, b) => b.zeroRate - a.zeroRate || b.zeroCount - a.zeroCount);
+      const topRate = ranked[0].zeroRate;
+      const leaders = ranked.filter(item => Math.abs(item.zeroRate - topRate) < 0.000001);
+
+      if (leaders.length === 1) {
+        return `<strong style="color: var(--text)">${escapeHtml(leaders[0].consultant)}</strong> lidera a taxa de zeros, com <strong style="color: var(--accent)">${numberBR(leaders[0].zeroRate * 100, 1)}%</strong> da janela monitorada sem produção.`;
+      }
+
+      const visibleNames = leaders.slice(0, 3).map(item => `<strong style="color: var(--text)">${escapeHtml(item.consultant)}</strong>`);
+      const extraCount = leaders.length - visibleNames.length;
+      const namesBlock = visibleNames.join(', ');
+      const suffix = extraCount > 0 ? ` e mais <strong style="color: var(--text)">${numberBR(extraCount)}</strong>` : '';
+
+      return `${namesBlock}${suffix} lideram a taxa de zeros, todos com <strong style="color: var(--accent)">${numberBR(topRate * 100, 1)}%</strong> da janela monitorada sem produção.`;
+    }
+
+    function renderMonthOptions() {
+      const current = state.selectedMonth;
+
+      els.monthSelect.innerHTML = state.availableMonths
+        .map(month => `<option value="${month}" ${month === current ? 'selected' : ''}>${escapeHtml(formatMonth(month))}</option>`)
+        .join('');
+
+      els.monthSelectLabel.textContent = current ? formatMonth(current) : 'Selecione o período';
+
+      els.monthSelectMenu.innerHTML = state.availableMonths
+        .map(month => `
+          <button
+            type="button"
+            class="custom-select-option ${month === current ? 'is-active' : ''}"
+            data-month-option="${month}"
+            role="option"
+            aria-selected="${month === current ? 'true' : 'false'}"
+          >
+            ${escapeHtml(formatMonth(month))}
+          </button>
+        `).join('');
+    }
+
+    function closeMonthMenu() {
+      els.monthSelectWrap.classList.remove('open');
+      els.monthSelectTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMonthMenu() {
+      els.monthSelectWrap.classList.add('open');
+      els.monthSelectTrigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function toggleMonthMenu() {
+      if (els.monthSelectWrap.classList.contains('open')) {
+        closeMonthMenu();
+      } else {
+        openMonthMenu();
+      }
+    }
+
+    function renderKPIs(vm) {
+      const cards = [
+        {
+          label: 'Total produzido',
+          value: currency(vm.totalProduced),
+          subtext: `Período selecionado: ${escapeHtml(vm.monthLabel)}`,
+          className: 'tone-produced'
+        },
+        {
+          label: 'Total de contratos',
+          value: numberBR(vm.totalContracts),
+          subtext: 'Cada linha válida da matriz conta como um contrato.',
+          className: 'tone-contracts'
+        },
+        {
+          label: 'Ticket médio',
+          value: currency(vm.ticketMean),
+          subtext: 'Total produzido dividido pela quantidade de contratos.',
+          className: 'tone-ticket'
+        },
+        {
+          label: 'Dias considerados',
+          value: `${numberBR(vm.elapsedDays)}/${numberBR(CONFIG.PROJECTION_DAYS)}`,
+          subtext: 'Dias operacionais passados no mês versus base de projeção de 22 dias.',
+          className: 'tone-days'
+        }
+      ];
+
+      els.kpisGrid.innerHTML = cards.map(card => `
+        <div class="kpi-card ${card.className}">
+          <div class="kpi-label">${card.label}</div>
+          <div class="kpi-value">${card.value}</div>
+          <div class="kpi-subtext">${card.subtext}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleZeroStatusFilter(filterKey) {
+      state.zeroStatusFilter = state.zeroStatusFilter === filterKey ? '' : filterKey;
+      render();
+    }
+
+    function buildStatusSummaryRow(statusClass, label, count) {
+      const isActive = state.zeroStatusFilter === statusClass;
+      const hasFilter = Boolean(state.zeroStatusFilter);
+      const chipClass = ['status-pill', statusClass, 'interactive-chip', isActive ? 'is-active' : '', hasFilter && !isActive ? 'is-dimmed' : ''].filter(Boolean).join(' ');
+      return `
+        <div class="mini-summary-row">
+          <button type="button" class="${chipClass}" data-zero-status-filter="${statusClass}" aria-pressed="${isActive ? 'true' : 'false'}">${label}</button>
+          <strong>${numberBR(count)}</strong>
+        </div>
+      `;
+    }
+
+    function renderZeroSection(vm) {
+      const totalZeroOccurrences = vm.zeroDaysAll.reduce((sum, item) => sum + item.zeroCount, 0);
+      const monitoredOccurrences = vm.zeroDaysAll.reduce((sum, item) => sum + (item.monitoredDays || 0), 0);
+      const classified = vm.zeroDaysAll.map(item => ({ ...item, status: classifyZeroStatus(item.zeroCount, item.monitoredDays) }));
+      const criticalItems = classified.filter(item => item.status.className === 'critico');
+      const alertItems = classified.filter(item => item.status.className === 'alerta');
+      const okItems = classified.filter(item => item.status.className === 'ok');
+      const rampItems = classified.filter(item => item.status.className === 'rampa');
+      const priorityBase = criticalItems.length ? criticalItems : alertItems;
+      const priorityLabel = criticalItems.length ? 'feedback imediato' : 'acompanhamento';
+      const priorityPreview = priorityBase.slice(0, 3).map(item => escapeHtml(item.consultant)).join(', ');
+      const prioritySuffix = priorityBase.length > 3 ? ` e mais ${numberBR(priorityBase.length - 3)}` : '';
+      const averageZeroRate = monitoredOccurrences ? totalZeroOccurrences / monitoredOccurrences : 0;
+
+      els.zeroMeta.innerHTML = [
+        `<span class="meta-chip">Período: <strong>${escapeHtml(vm.monthLabel)}</strong></span>`,
+        `<span class="meta-chip">Última data da base: <strong>${escapeHtml(formatDate(vm.lastDate))}</strong></span>`,
+        `<span class="meta-chip">Consultoras monitoradas: <strong>${numberBR(vm.consultantCount)}</strong></span>`
+      ].join('');
+
+      els.zeroSummaryCard.innerHTML = `
+        <div class="kpi-label">Resumo operacional</div>
+        <div class="kpi-value">${numberBR(totalZeroOccurrences)}</div>
+        <div class="kpi-subtext">
+          ocorrências totais de dias zerados no período filtrado, considerando apenas os dias após a primeira venda de cada consultora.<br><br>
+          Taxa média de zeros no recorte: <strong style="color: var(--text)">${numberBR(averageZeroRate * 100, 1)}%</strong>.<br><br>
+          ${buildOffenderSummary(vm.zeroDaysAll)}
+        </div>
+      `;
+
+      const activeStatusLabel = state.zeroStatusFilter
+        ? ({ critico: 'Crítico', alerta: 'Alerta', ok: 'OK', rampa: 'Em rampa' }[state.zeroStatusFilter] || '')
+        : '';
+
+      els.zeroStatusCard.innerHTML = `
+        <div class="kpi-label">Distribuição de status</div>
+        <div class="mini-summary-text" style="margin-top:0; margin-bottom:10px;">${numberBR(monitoredOccurrences)} dia(s) monitorados após a primeira venda.${activeStatusLabel ? `<br><br><strong style="color: var(--text)">Filtro ativo:</strong> ${activeStatusLabel}. Clique novamente para limpar.` : ''}</div>
+        <div class="mini-summary-list">
+          ${buildStatusSummaryRow('critico', 'Crítico', criticalItems.length)}
+          ${buildStatusSummaryRow('alerta', 'Alerta', alertItems.length)}
+          ${buildStatusSummaryRow('ok', 'OK', okItems.length)}
+          ${buildStatusSummaryRow('rampa', 'Em rampa', rampItems.length)}
+        </div>
+      `;
+
+      els.zeroPriorityCard.innerHTML = `
+        <div class="kpi-label">Prioridade gerencial</div>
+        <div class="kpi-value">${numberBR(priorityBase.length)}</div>
+        <div class="mini-summary-text">
+          ${criticalItems.length
+            ? 'consultora(s) exigem reação imediata no período atual.'
+            : alertItems.length
+              ? 'consultora(s) pedem acompanhamento mais próximo.'
+              : 'nenhuma consultora exige escalada imediata neste recorte.'}<br><br>
+          ${priorityBase.length
+            ? `<strong style="color: var(--text)">${priorityPreview}${prioritySuffix}</strong> pedem ${priorityLabel}.`
+            : 'A distribuição atual está sob controle.'}
+        </div>
+      `;
+
+      if (!vm.zeroDays.length) {
+        els.zeroDaysBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="muted">Nenhuma consultora corresponde ao filtro atual.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      const term = normalizeKey(state.search);
+      const filteredZeroDays = classified.filter(item => {
+        const matchesSearch = !term || normalizeKey(item.consultant).includes(term);
+        const matchesStatus = !state.zeroStatusFilter || item.status.className === state.zeroStatusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      if (!filteredZeroDays.length) {
+        const statusHint = state.zeroStatusFilter ? ' e ao status selecionado' : '';
+        els.zeroDaysBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="muted">Nenhuma consultora corresponde ao filtro de busca atual${statusHint}.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      els.zeroDaysBody.innerHTML = filteredZeroDays.map(item => {
+        const startLabel = item.firstSaleDate ? formatDate(item.firstSaleDate) : 'Não iniciou';
+        const datesMarkup = item.zeroDates.length
+          ? `<div class="zero-days-list">${item.zeroDates.map(date => `<span class="zero-chip">${formatDate(date)}</span>`).join('')}</div>`
+          : '<span class="muted">Sem dias zerados</span>';
+
+        return `
+          <tr>
+            <td>
+              <div class="consultant-name">${escapeHtml(item.consultant)}</div>
+              <div class="muted">Monitoramento desde: ${escapeHtml(startLabel)}</div>
+            </td>
+            <td>
+              <div class="consultant-name">${numberBR(item.monitoredDays)}</div>
+              <div class="pill-value">${item.monitoredDays === 1 ? 'dia monitorado' : 'dias monitorados'}</div>
+            </td>
+            <td>
+              <div class="consultant-name">${numberBR(item.zeroCount)}</div>
+              <div class="pill-value">${item.zeroCount === 1 ? 'dia zerado' : 'dias zerados'}</div>
+            </td>
+            <td>
+              <div class="consultant-name">${numberBR(item.zeroRate * 100, 1)}%</div>
+              <div class="pill-value">da janela monitorada</div>
+            </td>
+            <td><span class="status-pill ${item.status.className}">${item.status.label}</span></td>
+            <td><span class="action-pill ${item.status.className}">${item.status.action}</span></td>
+            <td>${datesMarkup}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPerformanceSection(vm) {
+      els.performanceMeta.innerHTML = [
+        `<span class="meta-chip">Projeção-base: <strong>${numberBR(CONFIG.PROJECTION_DAYS)} dias</strong></span>`,
+        `<span class="meta-chip">Média das projeções: <strong>${escapeHtml(currency(vm.averageProjection))}</strong></span>`
+      ].join('');
+
+      if (!vm.performance.length) {
+        els.performanceBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="muted">Nenhuma consultora corresponde ao filtro atual.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      els.performanceBody.innerHTML = vm.performance.map(item => `
+        <tr>
+          <td>
+            <div class="consultant-name">${escapeHtml(item.consultant)}</div>
+            <div class="muted">Última venda: ${escapeHtml(formatDate(item.lastSaleDate))}</div>
+          </td>
+          <td>${currency(item.realized)}</td>
+          <td>${numberBR(item.contracts)}</td>
+          <td>${currency(item.averageDay)}</td>
+          <td>${currency(item.projection)}</td>
+          <td><span class="trend ${item.trendClass}">${item.trend}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderEmpty(message) {
+      els.emptyState.style.display = 'block';
+      els.emptyState.textContent = message;
+    }
+
+    function hideEmpty() {
+      els.emptyState.style.display = 'none';
+      els.emptyState.textContent = '';
+    }
+
+    function setStatus(kind, message) {
+      els.refreshText.textContent = message;
+      els.statusDot.classList.remove('loading', 'error');
+      if (kind === 'loading') els.statusDot.classList.add('loading');
+      if (kind === 'error') els.statusDot.classList.add('error');
+    }
+
+    function renderError(message) {
+      if (!message) {
+        els.errorBox.style.display = 'none';
+        els.errorBox.textContent = '';
+        return;
+      }
+      els.errorBox.style.display = 'block';
+      els.errorBox.textContent = message;
+    }
+
+    function render() {
+      renderError(state.error);
+
+      if (!state.parsedRows.length) {
+        renderEmpty('Nenhum dado válido foi encontrado na matriz publicada. Verifique a publicação da planilha e os nomes das colunas.');
+        return;
+      }
+
+      hideEmpty();
+      renderMonthOptions();
+      const vm = buildViewModel();
+      renderKPIs(vm);
+      renderZeroSection(vm);
+      renderPerformanceSection(vm);
+    }
+
+    async function loadData() {
+      state.loading = true;
+      state.error = '';
+      setStatus('loading', 'Buscando matriz publicada...');
+
+      try {
+        const csvUrl = toCsvUrl(CONFIG.SOURCE_URL);
+        const response = await fetch(csvUrl, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Falha ao buscar CSV publicado (${response.status}).`);
+        }
+
+        const text = await response.text();
+        const rows = parseCSV(text);
+        const objects = rowsToObjects(rows);
+        const dataset = buildDataset(objects);
+        const months = getAvailableMonths(dataset);
+
+        state.rawRows = rows;
+        state.parsedRows = dataset;
+        state.availableMonths = months;
+
+        if (!months.length) {
+          throw new Error('A matriz foi carregada, mas nenhuma linha válida com data e consultora foi identificada.');
+        }
+
+        if (!state.selectedMonth || !months.includes(state.selectedMonth)) {
+          state.selectedMonth = months[0];
+        }
+
+        state.lastUpdatedAt = new Date();
+        setStatus('ok', `Atualizado em ${state.lastUpdatedAt.toLocaleTimeString('pt-BR')}`);
+      } catch (error) {
+        console.error(error);
+        state.error = error.message || 'Erro inesperado ao carregar a matriz.';
+        setStatus('error', 'Falha ao carregar a matriz');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    function bindEvents() {
+      els.btnRefresh.addEventListener('click', loadData);
+
+      els.monthSelectTrigger.addEventListener('click', () => {
+        toggleMonthMenu();
+      });
+
+      els.monthSelectMenu.addEventListener('click', event => {
+        const option = event.target.closest('[data-month-option]');
+        if (!option) return;
+        state.selectedMonth = option.getAttribute('data-month-option') || '';
+        els.monthSelect.value = state.selectedMonth;
+        closeMonthMenu();
+        render();
+      });
+
+      document.addEventListener('click', event => {
+        if (!els.monthSelectWrap.contains(event.target)) {
+          closeMonthMenu();
+        }
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          closeMonthMenu();
+        }
+      });
+
+      els.monthSelect.addEventListener('change', event => {
+        state.selectedMonth = event.target.value;
+        render();
+      });
+
+      els.searchInput.addEventListener('input', event => {
+        state.search = event.target.value || '';
+        render();
+      });
+
+      els.zeroStatusCard.addEventListener('click', event => {
+        const trigger = event.target.closest('[data-zero-status-filter]');
+        if (!trigger) return;
+        toggleZeroStatusFilter(trigger.getAttribute('data-zero-status-filter') || '');
+      });
+    }
+
+    bindEvents();
+    loadData();
+    setInterval(loadData, CONFIG.AUTO_REFRESH_MS);
+  </script>
+</body>
+</html>
