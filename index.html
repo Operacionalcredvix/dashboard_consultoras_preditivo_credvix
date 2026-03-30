@@ -845,7 +845,7 @@
       <div class="header-left">
         <div class="brand-logo">Cred<span>vix</span></div>
         <div class="dashboard-name">Dashboard Preditivo de Consultoras</div>
-        <p>Fonte única: matriz bruta publicada no Google Sheets</p>
+        <p>Visão consolidada da operação comercial</p>
       </div>
       <div class="header-right">
         <div class="refresh-status" id="refreshStatus">
@@ -882,9 +882,9 @@
       <section class="section-card" id="sectionZeroDays">
         <div class="section-head">
           <div>
-            <div class="section-title">Análise de Ofensores (dias sem produção)</div>
+            <div class="section-title">Análise de Ofensores</div>
             <div class="section-note">
-              O cálculo considera apenas os dias operacionais do período selecionado. Domingos são ignorados. Sábado entra normalmente. Os dias zerados só passam a valer a partir da primeira venda da consultora dentro do mês filtrado. O status agora é calculado pela taxa de zeros dentro da janela monitorada, não pelo número bruto de dias zerados.
+              Identifique rapidamente quais consultoras exigem atenção, acompanhe a recorrência de dias sem produção e priorize a atuação da gestão.
             </div>
           </div>
           <div class="section-meta" id="zeroMeta"></div>
@@ -900,8 +900,8 @@
           <div class="table-card">
             <div class="table-head">
               <div>
-                <div class="table-title">Mapa de zeros por consultora</div>
-                <div class="table-subtitle">Quantidade de dias zerados e relação das datas sem produção</div>
+                <div class="table-title">Dias sem produção por consultora</div>
+                <div class="table-subtitle">Leitura individual para identificar ofensores e priorizar atuação</div>
               </div>
             </div>
             <div class="table-wrap">
@@ -927,9 +927,9 @@
       <section class="section-card" id="sectionPerformance">
         <div class="section-head">
           <div>
-            <div class="section-title">PAINEL DE GESTÃO PREDITIVA</div>
+            <div class="section-title">Painel de Gestão Preditiva</div>
             <div class="section-note">
-              A projeção considera uma base fixa de 22 dias operacionais. A tendência segue três faixas — alta, média e baixa — comparando a projeção individual com a média projetada do grupo.
+              Acompanhe produção, contratos, ticket médio e projeção de resultado em uma leitura direta por consultora.
             </div>
           </div>
           <div class="section-meta" id="performanceMeta"></div>
@@ -940,8 +940,8 @@
         <div class="table-card">
           <div class="table-head">
             <div>
-              <div class="table-title">Performance por consultora e projeção</div>
-              <div class="table-subtitle">Realizado, quantidade de contratos, média diária, projeção em 22 dias e tendência relativa</div>
+              <div class="table-title">Performance e projeção por consultora</div>
+                <div class="table-subtitle">Comparativo de resultado atual, ritmo diário e potencial de fechamento</div>
             </div>
           </div>
           <div class="table-wrap">
@@ -969,7 +969,7 @@
   </div>
 
   <div class="footer-note">
-    <strong>Observações importantes.</strong> O dashboard trabalha a partir da matriz bruta publicada. Se existir consultora ativa sem nenhuma venda no mês e ela não estiver em <code>MANUAL_CONSULTANTS</code>, a base não tem como “adivinhar” essa pessoa. Na análise de ofensores, os dias zerados só começam a contar a partir da primeira venda da consultora no mês filtrado. Isso continua sendo um proxy, não uma data real de admissão. O status não usa mais o número bruto de dias zerados: ele usa a taxa de zeros dentro da janela monitorada. Regra aplicada: menos de 6 dias monitorados = <strong>Em rampa</strong>; até 30% de zeros = <strong>OK</strong>; acima de 30% até 60% = <strong>Alerta</strong>; acima de 60% = <strong>Crítico</strong>. A regra de tendência usada aqui não copia cegamente a planilha antiga: ela usa três níveis e uma comparação clara contra a média de projeção do grupo. Se você abrir este arquivo localmente e o navegador bloquear a leitura do Google Sheets, hospede o HTML em um servidor simples ou no mesmo ambiente em que hospedou o projeto Ferrão.
+    Indicadores atualizados automaticamente com base na operação publicada. Use os filtros para aprofundar a leitura por período e consultora.
   </div>
 
   <script>
@@ -1513,19 +1513,19 @@
         {
           label: 'Total de contratos',
           value: numberBR(vm.totalContracts),
-          subtext: 'Cada linha válida da matriz conta como um contrato.',
+          subtext: 'Contratos contabilizados no período selecionado.',
           className: 'tone-contracts'
         },
         {
           label: 'Ticket médio',
           value: currency(vm.ticketMean),
-          subtext: 'Total produzido dividido pela quantidade de contratos.',
+          subtext: 'Valor médio por contrato no período.',
           className: 'tone-ticket'
         },
         {
           label: 'Dias considerados',
           value: `${numberBR(vm.elapsedDays)}/${numberBR(CONFIG.PROJECTION_DAYS)}`,
-          subtext: 'Dias operacionais passados no mês versus base de projeção de 22 dias.',
+          subtext: 'Dias considerados na leitura atual do período.',
           className: 'tone-days'
         }
       ];
@@ -1580,8 +1580,8 @@
         <div class="kpi-label">Resumo operacional</div>
         <div class="kpi-value">${numberBR(totalZeroOccurrences)}</div>
         <div class="kpi-subtext">
-          ocorrências totais de dias zerados no período filtrado, considerando apenas os dias após a primeira venda de cada consultora.<br><br>
-          Taxa média de zeros no recorte: <strong style="color: var(--text)">${numberBR(averageZeroRate * 100, 1)}%</strong>.<br><br>
+          ocorrências de dias sem produção no período selecionado.<br><br>
+          Taxa média do grupo: <strong style="color: var(--text)">${numberBR(averageZeroRate * 100, 1)}%</strong>.<br><br>
           ${buildOffenderSummary(vm.zeroDaysAll)}
         </div>
       `;
@@ -1592,7 +1592,7 @@
 
       els.zeroStatusCard.innerHTML = `
         <div class="kpi-label">Distribuição de status</div>
-        <div class="mini-summary-text" style="margin-top:0; margin-bottom:10px;">${numberBR(monitoredOccurrences)} dia(s) monitorados após a primeira venda.${activeStatusLabel ? `<br><br><strong style="color: var(--text)">Filtro ativo:</strong> ${activeStatusLabel}. Clique novamente para limpar.` : ''}</div>
+        <div class="mini-summary-text" style="margin-top:0; margin-bottom:10px;">${numberBR(monitoredOccurrences)} dia(s) avaliados no período.${activeStatusLabel ? `<br><br><strong style="color: var(--text)">Filtro ativo:</strong> ${activeStatusLabel}. Clique novamente para limpar.` : ''}</div>
         <div class="mini-summary-list">
           ${buildStatusSummaryRow('critico', 'Crítico', criticalItems.length)}
           ${buildStatusSummaryRow('alerta', 'Alerta', alertItems.length)}
@@ -1652,11 +1652,11 @@
           <tr>
             <td>
               <div class="consultant-name">${escapeHtml(item.consultant)}</div>
-              <div class="muted">Monitoramento desde: ${escapeHtml(startLabel)}</div>
+              <div class="muted">Início da leitura: ${escapeHtml(startLabel)}</div>
             </td>
             <td>
               <div class="consultant-name">${numberBR(item.monitoredDays)}</div>
-              <div class="pill-value">${item.monitoredDays === 1 ? 'dia monitorado' : 'dias monitorados'}</div>
+              <div class="pill-value">${item.monitoredDays === 1 ? 'dia avaliado' : 'dias avaliados'}</div>
             </td>
             <td>
               <div class="consultant-name">${numberBR(item.zeroCount)}</div>
@@ -1664,7 +1664,7 @@
             </td>
             <td>
               <div class="consultant-name">${numberBR(item.zeroRate * 100, 1)}%</div>
-              <div class="pill-value">da janela monitorada</div>
+              <div class="pill-value">do período avaliado</div>
             </td>
             <td><span class="status-pill ${item.status.className}">${item.status.label}</span></td>
             <td><span class="action-pill ${item.status.className}">${item.status.action}</span></td>
